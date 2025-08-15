@@ -9,6 +9,13 @@ on:
 jobs:
   build-test:
     runs-on: ubuntu-latest
+    env:
+      DB_CONNECTION: mysql
+      DB_HOST: 127.0.0.1
+      DB_PORT: 3306
+      DB_DATABASE: testing
+      DB_USERNAME: root
+      DB_PASSWORD: root
     services:
       mysql:
         image: mysql:8
@@ -39,13 +46,6 @@ jobs:
       - name: Install PHP dependencies
         run: composer install --prefer-dist --no-interaction
       - name: App key and migrate
-        env:
-          DB_CONNECTION: mysql
-          DB_HOST: 127.0.0.1
-          DB_PORT: 3306
-          DB_DATABASE: testing
-          DB_USERNAME: root
-          DB_PASSWORD: root
         run: |
           php artisan key:generate
           php artisan migrate --graceful --ansi
