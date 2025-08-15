@@ -1,0 +1,68 @@
+name: CI
+
+on:
+  push:
+    branches: [development, staging, production]
+  pull_request:
+    branches: [development, staging, production]
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: testing
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: mbstring, intl, pdo_mysql, bcmath, gd
+          coverage: none
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+      - name: Copy env
+        run: cp .env.example .env
+      - name: Install PHP dependencies
+        run: composer install --prefer-dist --no-interaction
+      - name: App key and migrate
+        env:
+          DB_CONNECTION: mysql
+          DB_HOST: 127.0.0.1
+          DB_PORT: 3306
+          DB_DATABASE: testing
+          DB_USERNAME: root
+          DB_PASSWORD: root
+        run: |
+          php artisan key:generate
+          php artisan migrate --graceful --ansi
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Cache NPM
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: ${{ runner.os }}-node-
+      - name: Build assets
+        run: |
+          npm ci --no-audit --no-fund --prefer-offline
+          npm run build --silent
+      - name: Lint
+        run: vendor/bin/pint --test
+      - name: Tests
+        run: ./vendor/bin/pest -q
