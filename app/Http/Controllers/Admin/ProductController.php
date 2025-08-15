@@ -14,6 +14,7 @@ class ProductController extends Controller
     public function index()
     {
         $products = Product::latest()->paginate(12);
+
         return view('admin.products.index', compact('products'));
     }
 
@@ -75,7 +76,7 @@ class ProductController extends Controller
     {
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'slug' => ['required', 'string', 'max:255', 'unique:products,slug,' . $product->id],
+            'slug' => ['required', 'string', 'max:255', 'unique:products,slug,'.$product->id],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'numeric', 'min:0'],
             'currency' => ['required', 'string', 'size:3'],
@@ -97,6 +98,7 @@ class ProductController extends Controller
     public function destroy(Product $product)
     {
         $product->delete();
+
         return redirect()->route('admin.products.index')->with('status', 'Product deleted');
     }
 }
