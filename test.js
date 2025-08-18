@@ -7,8 +7,4 @@
 // 7. nothing is in here
 // 8. nothing is in here
 // 9. nothing is in here
-<<<<<<< HEAD
-// 10. nothing is in here lah
-=======
-// 10. nothing is in here
->>>>>>> refs/remotes/origin/development
+// 10. nothing is in here lah dudu
